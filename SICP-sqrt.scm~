@@ -1,0 +1,4 @@
+(define (sqiter guess delta x)
+  (if (goodenough? guess delta x) guess
+      (let* ((nextguess (improve guess x)) (dlta (abs (- guess nextguess))))
+	(sqiter nextguess dlta x))))

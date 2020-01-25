@@ -1,0 +1,5 @@
+(def fib
+     (lamdba (n)
+	     (if (= n 0) 0
+		 (do ((i n (- i 1)) (a1 1 (+ a1 a2)) (a2 0 a1))
+		     ((= i 0) a1)))))

@@ -1,0 +1,49 @@
+(define (string-split str tok)
+  (define (splitter pos los acc)
+     (cond [(= pos (string-length str)) (append los (list acc))]
+	   [else
+	    (let [(c (string-ref str pos))]
+	      (if (char=? c tok)
+		  (splitter (add1 pos) (append los (list acc)) "")
+		  (splitter (add1 pos) los (string-append acc (string c)))))]))
+  (splitter 0 '() ""))
+	
+	
+(define (read-file fname)
+  (open-input-file fname)
+)
+
+
+(define (getline f)
+  (let nam ((lines '()) (l (get-line f)))
+    (cond [(eq? #!eof l) (reverse lines)]
+	  [else
+	   (nam (cons l lines) (get-line f))])))
+
+
+(define string-slice
+  (case-lambda
+   ((str start) (substring str start (string-length str)))
+   ((str start end) (substring str start end))
+   ))
+
+
+(define (snoc a b)
+  (reverse (cons a (reverse b))))
+
+(define (take lst n)
+  (define (take lst n rsf)
+    (cond [(null? lst) rsf]
+          [(zero? n) rsf]
+          [else
+            (take (cdr lst) (sub1 n) (snoc (car lst) rsf))]))
+  (take lst n '()))
+
+
+(define (take2 lst n)
+  (let f ((ls '()) (i n) (lt lst))
+    (cond
+     ((null? lt) ls)
+     ((= i 0) ls)
+     (else
+      (f (snoc (car lt) ls) (sub1 i) (cdr lt))))))

@@ -1,0 +1,27 @@
+#lang r5rs
+
+(define make-queue
+  (let ((empty (cons 'ignore '())) (empty2 (cons 'ignore2 '())))
+    (lambda () 
+    (cons empty empty)))
+  )
+
+(define (putq! q v)
+  (let ((empty (cons 'ignore '())))
+    
+    (set-car! (cdr q) v)
+    (set-cdr! (cdr q) empty)
+    (set-cdr! q empty)
+    q
+    )
+  )
+
+(define (getq q)
+  (car (car q)))
+
+(define (delq! q)
+  (set-car! q (cdr (car q)))
+  )
+
+(define a
+  (lambda (x) (+ x 1)))

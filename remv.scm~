@@ -1,0 +1,6 @@
+(define remv
+  (lambda (x ls)
+    (cond
+     ((null? ls) '())
+     ((eqv? (car ls) x) (remv (cdr ls)))
+     (else (cons (car ls) (remv (cdr ls)))))))

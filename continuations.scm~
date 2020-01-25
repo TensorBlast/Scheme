@@ -1,0 +1,18 @@
+(define lwp-list '())
+
+(define lwp
+  (lambda (t)
+    ((set! lwp-list (append lwp-list (list t))))))
+
+(define start
+  (lambda()
+  (let ((p (car lwp-list)))
+    (set! lwp-list (cdr lwp-list))
+    (p)
+    )))
+
+(define pause
+  (lambda ()
+    (call/cc (lambda (k)
+	       (lwp (lamdba() (k #f)))
+	       (start)))))

@@ -1,0 +1,71 @@
+(load "utils.ss")
+
+
+(define (move point vec)
+  ;;get the increment step from from the first letter
+  (define (get-inc dir)
+    (case dir
+      (("U") 0+i)
+      (("R") 1)
+      (("D") 0-i)
+      (("L") -1)))
+
+  (define (movetovec last inc steps pts)
+    (cond [(zero? steps) pts]
+	  [else
+	   (let [(next (+ last inc))]
+	     (movetovec next inc (sub1 steps) (snoc next pts)))]))
+
+  (movetovec point (get-inc (string-slice vec 0 1))
+	(string->number (string-slice vec 1)) '()))
+
+(define (moveall vecs)
+  (define (moveall origin vecs ls)
+    (cond [(null? vecs) ls]
+	  [else
+	   (let [(this-move (move origin (car vecs)))]
+	     (moveall (car (reverse this-move)) (cdr vecs)
+		      (append ls this-move)))]))
+  (moveall 0 vecs '()))
+
+(define (dist pt)
+  (+ (abs (real-part pt)) (abs (imag-part pt))))
+
+(define (∩ lsta lstb)
+  (filter (lambda (m) (member m lstb)) lsta))
+
+(define closest
+  (lambda (x)
+    (car (sort < x))))
+
+(define (string->moves s)
+  (moveall (string-split s #\,)))
+
+
+
+(define (abs< a b)
+  (< (dist a) (dist b)))
+
+
+(define (smallest-manhattan-distance-expanding w1 w2)
+  (let [(sorted-w1 (sort abs< w1))
+        (sorted-w2 (sort abs< w2))]
+    (define (iter intersection radius)
+      (if (null? intersection)
+        (iter (∩ (take sorted-w1 radius) (take sorted-w2 radius)) (* 10 radius))
+        (closest (map dist intersection))))
+    (iter '() 1)))
+
+;(display (smallest-manhattan-distance-expanding wire-1 wire-2)) 
+
+
+(define (index el lst)
+  (let ((ls (member el (reverse lst))))
+    (length (cdr ls))
+    ))
+
+
+
+(define (fewest-combined-steps w1 w2)
+  (let [(intersections (∩ (take w1 10000) (take w2 10000)))]
+    (+ 2 (index (car intersections) w1) (index (car intersections) w2))))

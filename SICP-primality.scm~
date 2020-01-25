@@ -1,0 +1,5 @@
+(define (smallest-divisor n)
+  (define (iter n i)
+    (if (eqv? i 1) n
+	(if (divides? n i) i
+	    (iter n (-1 i))))))
