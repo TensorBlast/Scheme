@@ -50,14 +50,45 @@
    ((and (= s1 1) (= s2 1)) 1)
    ((and (= s1 0) (= s2 1)) 0)
    ((and (= s1 1) (= s2 0)) 0)
-   (else (error "Invalid signal -- LOGICAL AND" s))))
+   ((and (= s1 0) (= s2 0)) 0)
+   (else (error "Invalid signal -- LOGICAL AND"))))
 
 (define (logical-or s1 s2)
   (cond
    ((or (= s1 1) (= s2 1)) 1)
    ((and ( = s1 0) (= s2 0)) 0)
-   (else (error "Invalid signal -- LOGICAL OR" s))))
+   (else (error "Invalid signal -- LOGICAL OR"))))
 
+
+
+(define (inverter input output)
+  (define (invert-input)
+    (let ((new-value (logical-not (get-signal input))))
+      (after-delay inverter-delay
+                   (lambda ()
+                     (set-signal! output new-value)))))
+  (add-action! input invert-input)
+  'ok)
+
+(define (and-gate a1 a2 output)
+  (define (and-action-procedure)
+    (let ((new-value (logical-and (get-signal a1) (get-signal a2))))
+      (after-delay and-gate-delay
+                   (lambda ()
+                     (set-signal! output new-value)))))
+  (add-action! a1 and-action-procedure)
+  (add-action! a2 and-action-procedure)
+  'ok)
+
+(define (or-gate a1 a2 output)
+  (define (or-action-procedure)
+    (let ((new-value (logical-or (get-signal a1) (get-signal a2))))
+      (after-delay or-gate-delay
+                   (lambda ()
+                     (set-signal! output new-value)))))
+  (add-action! a1 or-action-procedure)
+  (add-action! a2 or-action-procedure)
+  'ok)
 
 ;; Implementing the agenda
 (load "queue.scm")
@@ -86,3 +117,83 @@
 
 (define (empty-agenda? agenda)
   (null? (segments agenda)))
+
+(define (add-to-agenda! time action agenda)
+  (define (belongs-before? segments)
+    (or (null? segments)
+        (< time (segment-time (car segments)))))
+
+  (define (make-new-time-segment time action)
+    (let ((q (make-queue)))
+      (insert-queue q action)
+      (make-time-segment time q)))
+
+  (define (add-to-segments! segments)
+    (if (= (segment-time (car segments)) time)
+        (insert-queue (segment-queue (car segments)) action)
+        (let ((rest (cdr segments)))
+          (if (belongs-before? rest)
+              (set-cdr! segments
+                        (cons (make-new-time-segment time action)
+                              (cdr segments)))
+              (add-to-segments! rest)))))
+
+  (let ((segments (segments agenda)))
+    (if (belongs-before? segments)
+        (set-segments! agenda
+                       (cons (make-new-time-segment time action)
+                             segments))
+        (add-to-segments! segments))))
+
+(define (remove-first-agenda-item! agenda)
+  (let ((q (segment-queue (first-segment agenda))))
+    (delete-queue! q)
+    (if (isempty? q)
+        (set-segments! agenda (rest-segments agenda)))))
+
+(define (first-agenda-item agenda)
+  (if (empty-agenda? agenda) (error "Agenda is empty -- FIRST-AGENDA-ITEM" agenda)
+      (let ((first-seg (first-segment agenda)))
+        (set-current-time! agenda (segment-time first-seg))
+        (get-first-element (segment-queue first-seg)))))
+
+
+(define the-agenda (make-agenda))
+
+(define (after-delay delay action)
+  (add-to-agenda! (+ delay (current-time the-agenda))
+                 action the-agenda))
+
+(define (propagate)
+  (if (empty-agenda? the-agenda)
+      'done
+      (let ((first-item (first-agenda-item the-agenda)))
+        (first-item)
+        (remove-first-agenda-item! the-agenda)
+        (propagate))))
+
+
+(define (probe name wire)
+  (add-action! wire
+               (lambda ()
+                 (newline)
+                 (display name)
+                 (display " ")
+                 (display (current-time the-agenda))
+                 (display " New value = ")
+                 (display (get-signal wire))
+                 (newline)
+                 )))
+
+(define inverter-delay 2)
+(define and-gate-delay 3)
+(define or-gate-delay 5)
+
+
+(define (half-adder a b s c)
+  (let ((d (make-wire)) (e (make-wire)))
+    (or-gate a b d)
+    (and-gate a b c)
+    (inverter c e)
+    (and-gate d e s)
+    'ok))
