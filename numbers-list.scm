@@ -1,0 +1,12 @@
+(define (number->list n)
+  (let loop ((num n) (acc '()))
+    (if (< num 10) (cons num acc)
+	(loop (quotient num 10)
+	      (cons (remainder num 10) acc)))))
+
+(define (number->list2 n)
+  (define (inner i l)
+    (if (< i 10) (cons i l)
+	(inner (quotient i 10) (cons (remainder i 10) l))))
+  (inner n '())
+  )
