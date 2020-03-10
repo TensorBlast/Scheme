@@ -2,10 +2,12 @@
   (if (= b 0) (stream-car a)
       (stream-ref (stream-cdr a) (- b 1))))
 
-(define (stream-map proc s)
-  (if (stream-null? s) the-empty-stream
-      (cons-stream (proc (stream-car s))
-                   (stream-map proc (stream-cdr s)))))
+(define (stream-map proc . argstreams)
+  (if (stream-null? (car argstreams)) the-empty-stream
+      (cons-stream
+       (apply proc (map stream-car argstreams))
+       (apply stream-map
+              (cons proc (map stream-cdr argstreams))))))
 
 (define (stream-for-each proc s)
   (if (stream-null? s) 'done
@@ -75,7 +77,7 @@
 (define (integers-starting-from n)
   (cons-stream n (integers-starting-from (+ n 1))))
 
-(define (ones)
+(define ones
   (cons-stream 1 ones))
 
 
@@ -84,3 +86,16 @@
 
 (define no-sevens
   (stream-filter (lambda (x) (not (divisible x 7))) (integers-starting-from 1)))
+
+(define (add-streams s1 s2)
+  (stream-map + s1 s2))
+
+(define integers
+  (cons-stream 1 (add-streams ones integers)))
+
+(define (show x)
+  (display-line x)
+  x)
+
+(define x (stream-map show (stream-enumerate-interval 0 10)))
+
